@@ -208,9 +208,11 @@ a.sc:hover::before,a.lk:hover::before{opacity:1}
 .bloco{margin-bottom:32px}
 .bloco-h{display:flex;align-items:center;gap:12px;margin-bottom:12px}
 .bloco-h h2{font-family:var(--f-tit);font-size:19px;font-weight:600}
-.bloco-h .linha-h{flex:1;height:1px;background:linear-gradient(90deg,var(--line2),transparent)}
-.bloco-h a{font-family:var(--f-mono);font-size:12px;color:var(--mut);text-decoration:none}
-.bloco-h a:hover{color:var(--acc)}
+.bloco-tit{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--txt);transition:color .2s}
+.bloco-tit svg{width:16px;height:16px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round;opacity:.5;transition:transform .3s var(--ease),opacity .2s}
+.bloco-tit:hover{color:var(--acc)}
+.bloco-tit:hover svg{opacity:1;transform:translateX(3px)}
+.qt-b{font-family:var(--f-mono);font-size:11.5px;color:var(--mut2);padding:1px 7px;border-radius:6px;background:color-mix(in srgb,var(--cor) 14%,transparent)}
 .links{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
 .lk{min-height:140px}
 .lk-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
@@ -687,7 +689,7 @@ const DADOS_DEMO = {"empresas": [{"id": "vitalbor", "nome": "Vitalbor", "cor": "
       <div class="lk-pe"><span class="st${st.vivo?" vivo":""}" style="--stc:${st.cor}"><i></i>${st.txt}</span>${l.url?`<span class="host">${esc(host(l.url))}</span>`:`<span class="sl">sem link</span>`}</div>`;
     return l.url?`<a class="lk ${an()}" href="${esc(l.url)}" target="_blank" rel="noopener">${corpo}</a>`:`<div class="lk ${an()}">${corpo}</div>`;
   }
-  const blocoHTML=(tit,links,href)=>`<section class="bloco"><div class="bloco-h ${an()}"><h2>${esc(tit)}</h2><span class="linha-h"></span>${href?`<a href="${href}">abrir</a>`:""}</div>
+  const blocoHTML=(tit,links,href)=>`<section class="bloco"><div class="bloco-h ${an()}">${href?`<a class="bloco-tit" href="${href}" title="Ver só ${esc(tit)}"><h2>${esc(tit)}</h2>${SVG(I.seta)}</a>`:`<h2>${esc(tit)}</h2>`}<span class="qt-b">${links.length}</span></div>
     <div class="links">${links.map(linkHTML).join("")}</div></section>`;
   const vazio=(t,m,cfg)=>`<div class="vazio entra"><b>${t}</b>${m}${cfg?` <button data-abre-cfg="${cfg}">Abrir configurações</button>`:""}</div>`;
   const sep='<span class="sep">/</span>';
