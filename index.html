@@ -472,7 +472,8 @@ const DADOS_DEMO = {"empresas": [{"id": "vitalbor", "nome": "Vitalbor", "cor": "
 
   /* ---------------- dados ---------------- */
   const DEMO=!API_URL;
-  let DB=null,senha="",carregou=false;
+  let DB=null,senha="",carregou=false,SEMCONEXAO=false;
+  const msgRede=e=>e&&e.message==="LOGIN"||/fetch|network|Load failed|NetworkError/i.test(e&&e.message||"")?"Não foi possível falar com o Apps Script. O link está pedindo login do Google (na implantação, \"Quem pode acessar\" precisa ser Qualquer pessoa) ou você está sem internet.":(e&&e.message)||"Erro desconhecido.";
   const num=v=>{const n=parseFloat(v);return isNaN(n)?999:n;};
   const porOrdem=(a,b)=>num(a.ordem)-num(b.ordem)||String(a.nome).localeCompare(String(b.nome),"pt-BR");
   const empresas=()=>DB.empresas.slice().sort(porOrdem);
@@ -491,12 +492,12 @@ const DADOS_DEMO = {"empresas": [{"id": "vitalbor", "nome": "Vitalbor", "cor": "
       const txt=await r.text();
       if(/^\s*</.test(txt))throw new Error("LOGIN");
       const d=JSON.parse(txt);if(d.erro)throw new Error(d.erro);
-      const mudou=JSON.stringify(d)!==JSON.stringify(DB);DB=d;carregou=true;estado("planilha conectada");
+      const mudou=JSON.stringify(d)!==JSON.stringify(DB)||SEMCONEXAO;SEMCONEXAO=false;DB=d;carregou=true;estado("planilha conectada");
       if(mudou||manual)tudo(!manual);
     }catch(e){
       estado("sem conexão","erro");
-      if(!DB){DB={empresas:[],setores:[],subsetores:[],links:[]};carregou=true;tudo(true);}
-      toast(e.message==="LOGIN"?"O Apps Script está pedindo login. Na implantação, mude \"Quem pode acessar\" para Qualquer pessoa.":(e.message&&!/fetch|network|Failed/i.test(e.message)?e.message:"Não foi possível carregar os dados. Confira a internet e o link do Apps Script."),true);
+      SEMCONEXAO=true;if(!DB){DB=JSON.parse(JSON.stringify(DADOS_DEMO));carregou=true;tudo(true);}
+      toast(msgRede(e),true);
     }
   }
   async function gravar(acao,tabela,dado){
@@ -756,7 +757,7 @@ const DADOS_DEMO = {"empresas": [{"id": "vitalbor", "nome": "Vitalbor", "cor": "
 
   function desenharCfg(){
     if(!DB)return;
-    $("cfgAviso").innerHTML=DEMO?`<div class="cfg-aviso demo">Modo demonstração: o que você cadastrar aqui some quando a página recarregar. Para salvar de verdade, configure o API_URL com o link do Apps Script.</div>`:"";
+    $("cfgAviso").innerHTML=SEMCONEXAO?`<div class="cfg-aviso demo" style="border-color:color-mix(in srgb,var(--conf) 45%,transparent);background:color-mix(in srgb,var(--conf) 12%,transparent);color:#FECACA">Sem conexão com a planilha. Você está vendo a lista de exemplo e nada pode ser salvo. O link do Apps Script está pedindo login do Google: na implantação, \"Quem pode acessar\" precisa ser Qualquer pessoa.</div>`:DEMO?`<div class="cfg-aviso demo">Modo demonstração: o que você cadastrar aqui some quando a página recarregar. Para salvar de verdade, configure o API_URL com o link do Apps Script.</div>`:"";
     $("abas").innerHTML=ABAS.map(([k,t])=>`<button class="aba" role="tab" aria-selected="${k===aba}" data-aba="${k}">${t}<span class="qt">${DB[k].length}</span></button>`).join("");
     let h="";
     if(!DEMO&&!senha)h+=`<div class="senha-box"><div class="campo"><label for="cfgSenha">Senha de edição</label><input id="cfgSenha" type="password" autocomplete="current-password" placeholder="Senha definida no Apps Script"></div><button class="btn pri" id="cfgEntrar">Liberar edição</button></div>`;
@@ -835,7 +836,7 @@ const DADOS_DEMO = {"empresas": [{"id": "vitalbor", "nome": "Vitalbor", "cor": "
     const t=ev.target;
     if(t.closest("#cfgEntrar")){const s=$("cfgSenha").value;if(!s)return toast("Digite a senha",true);
       t.disabled=true;try{const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({senha:s,acao:"testar"})});
-        const d=await r.json();if(d.erro)throw new Error(d.erro);senha=s;toast("Edição liberada");desenharCfg();}catch(e){toast(e.message||"Sem conexão",true);t.disabled=false;}return;}
+        const d=await r.json();if(d.erro)throw new Error(d.erro);senha=s;toast("Edição liberada");desenharCfg();}catch(e){toast(msgRede(e),true);t.disabled=false;}return;}
     const ic=t.closest("[data-icone]");if(ic){editando.dado.icone=ic.dataset.icone;document.querySelectorAll("#fIcone button").forEach(b=>b.setAttribute("aria-pressed",String(b===ic)));return;}
     if(t.closest("[data-novo]")){
       if(!podeEditar())return;
@@ -859,7 +860,7 @@ const DADOS_DEMO = {"empresas": [{"id": "vitalbor", "nome": "Vitalbor", "cor": "
       if(!d.id)d.id=novoId({setores:"s",subsetores:"u",links:"l"}[aba]);
       const btn=t.closest("[data-salvar]");btn.disabled=true;erro("Salvando...");
       try{await gravar("salvar",aba,d);editando=null;toast("Salvo");desenharCfg();tudo(false);}
-      catch(e){btn.disabled=false;erro(e.message||"Não salvou: sem conexão. Nada foi gravado.");}
+      catch(e){btn.disabled=false;erro(msgRede(e)+" Nada foi gravado.");}
       return;}
     const ex=t.closest("[data-excluir]");if(ex){
       if(!podeEditar())return;
