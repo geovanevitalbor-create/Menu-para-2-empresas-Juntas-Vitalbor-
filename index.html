@@ -601,7 +601,7 @@ const DADOS_DEMO = {"empresas": [{"id": "vitalbor", "nome": "Vitalbor", "cor": "
   // a arte cobre a tela como "cover"; os botões acompanham a posição real dos logos
   function posicionarArte(){
     const p=$("palco");if(!p||$("escolha").hidden)return;
-    const W=innerWidth,H=innerHeight,k=Math.max(W/ARTE.w,H/ARTE.h),w=ARTE.w*k,h=ARTE.h*k,x0=(W-w)/2,y0=(H-h)/2;
+    const W=innerWidth,H=innerHeight,k=Math.max(W/ARTE.w,H/ARTE.h),w=ARTE.w*k,h=ARTE.h*k,x0=(W-w)/2,y0=h>H?Math.max(H-h,-0.06*h):(H-h)/2;
     Object.assign(p.style,{width:w+"px",height:h+"px",left:x0+"px",top:y0+"px"});
     const retrato=matchMedia("(orientation:portrait) and (max-width:900px)").matches;
     document.querySelectorAll("#escolha [data-pos]").forEach(el=>{
